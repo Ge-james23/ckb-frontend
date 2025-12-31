@@ -17,17 +17,25 @@
         .btn-success { background: #34C759; color: white; }
         .btn-disabled { background: #E5E5EA; color: #8E8E93; pointer-events: none; }
 
-        /* 新增：右上角小按钮样式 */
-        .btn-text { background: transparent; color: #999; width: auto; height: auto; font-size: 12px; margin: 0; padding: 4px 8px; border: 1px solid #eee; border-radius: 6px; cursor: pointer; }
-        .btn-text:active { background: #f0f0f0; color: #333; }
+        /* 小按钮通用样式 */
+        .btn-text { background: transparent; color: #666; width: auto; height: auto; font-size: 12px; margin-left: 6px; padding: 4px 10px; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; }
+        .btn-text:active { background: #f0f0f0; }
+        
+        /* 刷新按钮 (蓝色) */
+        .btn-refresh { color: #007AFF; border-color: #007AFF; }
+        .btn-refresh:active { background: #eef6ff; }
+
+        /* 重置按钮 (红色) */
+        .btn-danger { color: #ff4d4f; border-color: #ff4d4f; }
+        .btn-danger:active { background: #fff1f0; }
 
         textarea { width: 100%; height: 120px; padding: 16px; border: 1px solid #E5E5EA; border-radius: 12px; font-size: 16px; background: #FAFAFA; box-sizing: border-box; resize: none; outline: none; -webkit-appearance: none; }
         textarea:focus { border-color: #007AFF; background: #fff; }
 
-        /* 修改：状态栏布局 */
+        /* 状态栏布局 */
         .status-bar { display: flex; justify-content: space-between; align-items: center; background: white; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; font-size: 14px; font-weight: 600; }
         .status-text { color: #34C759; }
-        .credit-text { color: #FF9500; margin-left: 8px; }
+        .credit-text { color: #FF9500; margin-left: 4px; }
 
         #result-area { margin-top: 20px; padding: 16px; background: #F2F8FF; border-radius: 12px; border: 1px solid #007AFF; color: #007AFF; display: none; }
         .spinner { width: 20px; height: 20px; border: 3px solid #ffffff; border-top: 3px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 8px; display: none; }
@@ -39,12 +47,20 @@
 
     <!-- 状态栏 -->
     <div id="status-bar" class="status-bar" style="display:none;">
-        <div style="display:flex; align-items:center;">
-            <span class="status-text">● 已连接</span>
-            <span class="credit-text" id="credit-display">剩余: 0</span>
+        <div style="display:flex; flex-direction: column; align-items: flex-start;">
+            <div><span class="status-text">● 已连接</span></div>
+            <div class="credit-text" id="credit-display" style="font-size:12px; margin-top:2px;">剩余: 0</div>
         </div>
-        <!-- 断开按钮 -->
-        <button class="btn-text" onclick="disconnectWallet()">断开连接</button>
+        
+        <!-- 右侧按钮组 -->
+        <div style="display:flex;">
+            <!-- 新增：刷新按钮 (不清除缓存) -->
+            <button class="btn-text btn-refresh" onclick="refreshPage()">刷新</button>
+            <!-- 断开 (退出登录) -->
+            <button class="btn-text" onclick="disconnectWallet()">断开</button>
+            <!-- 重置 (清空缓存) -->
+            <button class="btn-text btn-danger" onclick="clearCache()">重置</button>
+        </div>
     </div>
 
     <div class="card">
@@ -98,7 +114,7 @@
                 document.getElementById('scene-connect').style.display = 'none';
                 document.getElementById('page-title').innerText = "开始分析";
                 document.getElementById('page-desc').style.display = 'none';
-                document.getElementById('credit-display').innerText = `剩余: ${credits}`;
+                document.getElementById('credit-display').innerText = `剩余: ${credits} 次`;
 
                 if (credits > 0) {
                     document.getElementById('scene-ai').style.display = 'block';
@@ -116,7 +132,6 @@
                 if (!window.superise) throw new Error("请在 SupeRISE App 内打开");
                 const wallet = await window.superise.connectCkb();
                 localStorage.setItem('wallet_address', wallet.address);
-                // 仅当没有剩余次数记录时，才初始化为0；如果有记录，则保留
                 if (localStorage.getItem('credits') === null) {
                     localStorage.setItem('credits', 0);
                 }
@@ -125,11 +140,23 @@
             finally { setLoading('connect', false); }
         }
 
-        // 新增：断开连接逻辑
+        // 新增功能：仅刷新页面，不清除任何数据
+        function refreshPage() {
+            location.reload();
+        }
+
+        // 功能：普通断开 (保留余额)
         function disconnectWallet() {
-            if(confirm('确定要断开连接吗？(余额将保留)')) {
-                // 只清除地址，不清除 credits
+            if(confirm('确定要退出登录吗？(剩余次数将保留)')) {
                 localStorage.removeItem('wallet_address');
+                location.reload();
+            }
+        }
+
+        // 功能：彻底清除缓存 (重置所有数据)
+        function clearCache() {
+            if(confirm('⚠️ 警告：确定要重置所有数据吗？\n\n这将清除您的剩余次数记录！')) {
+                localStorage.clear();
                 location.reload();
             }
         }
@@ -169,7 +196,7 @@
                 document.getElementById('score-text').innerHTML = `${mood} <br><small>指数: ${(data.score*100).toFixed(0)}%</small>`;
                 
                 localStorage.setItem('credits', credits - 1);
-                document.getElementById('credit-display').innerText = `剩余: ${credits - 1}`;
+                document.getElementById('credit-display').innerText = `剩余: ${credits - 1} 次`;
                 if (credits - 1 <= 0) setTimeout(checkLoginState, 1500);
 
             } catch (err) { alert("AI 服务连接失败"); } 
