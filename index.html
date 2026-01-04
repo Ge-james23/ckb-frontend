@@ -103,7 +103,12 @@
         const RECEIVER = "ckt1qrfrwcdnvssswdwpn3s9v8fp87emat306ctjwsm3nmlkjg8qyza2cqgqqyfkevklr5ptewq6e2esd0gmfvqy207kjckpv35d";
         // ==========================================
 
-        window.addEventListener('load', () => checkLoginState());
+        window.addEventListener('load', () => {
+            checkLoginState()
+        // 👇👇👇 新增：网页一打开，立刻发送一个请求去唤醒服务器 👇👇👇
+    console.log("正在预热后端服务器...");
+    fetch(API_URL).then(() => console.log("后端已唤醒")).catch(() => {});
+        });
 
         function checkLoginState() {
             const address = localStorage.getItem('wallet_address');
@@ -212,3 +217,4 @@
     </script>
 </body>
 </html>
+
