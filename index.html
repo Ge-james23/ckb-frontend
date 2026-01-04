@@ -208,13 +208,29 @@
             finally { setLoading('ai', false); }
         }
 
-        function setLoading(type, isLoading) {
-            const s = document.getElementById(`spin-${type}`);
-            const b = s.parentElement;
-            s.style.display = isLoading ? 'block' : 'none';
-            isLoading ? b.classList.add('btn-disabled') : b.classList.remove('btn-disabled');
+      function setLoading(type, isLoading) {
+    const s = document.getElementById(`spin-${type}`);
+    const b = s.parentElement;
+    
+    if (isLoading) {
+        s.style.display = 'block';
+        b.classList.add('btn-disabled');
+        
+        // 👇👇👇 如果是 AI 分析按钮，提示用户耐心等待 👇👇👇
+        if (type === 'ai') {
+            document.getElementById('btn-text-ai').innerText = '分析中 (首次可能需30秒)...';
         }
+    } else {
+        s.style.display = 'none';
+        b.classList.remove('btn-disabled');
+        // 恢复原样
+        if (type === 'ai') {
+            document.getElementById('btn-text-ai').innerText = '🚀 开始分析';
+        }
+    }
+}
     </script>
 </body>
 </html>
+
 
